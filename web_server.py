@@ -2,10 +2,12 @@ from flask import Flask, render_template, send_file
 import boto3, json
 from picamera import PiCamera
 bucket='pennapps-at-seiji'
+with open('config.json', 'r') as config_file:
+    data = json.load(config_file)
 client = boto3.client(
 'rekognition',
-aws_access_key_id='AKIAJYU6XGW6QHDSJQ7Q',
-aws_secret_access_key='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',
+aws_access_key_id=data['AWS_ACCESS_KEY'],
+aws_secret_access_key=data['AWS_SECRET_ACCESS_KEY'],
 region_name='us-east-2'
 )
 app=Flask(__name__)
@@ -15,16 +17,13 @@ app.debug=True
 def home_page():
     return render_template('index.html')
 
-@app.route('/dyn/me.jpg')
-def send_image():
-    return send_file('dyn/me.jpg')
-
 @app.route('/repeat/', methods=['GET','POST'])
 def handle_runner():
+    print('new request')
     with PiCamera() as camera:
         camera.resolution = (300,300)
-        camera.capture('dyn/me.jpg')
-    res = aws_response('dyn/me.jpg')
+        camera.capture('photo.jpg')
+    res = aws_response('photo.jpg')
     resp = parse_response(res)
     ans=''
     if  not(resp):
@@ -33,6 +32,9 @@ def handle_runner():
         ans=resp
     return render_template('pic.html', emotion=ans)
 
+@app.route('/dyn/photo/<int:id>')
+def get_image(id):
+    return send_file('photo.jpg')
 
 @app.route('/picture/', methods=['POST'])
 def handle_pic(): 
@@ -58,6 +60,13 @@ def parse_response(response):
     for face_detail in response['FaceDetails']:
         emotions = face_detail['Emotions']
         return 'The primary emotion detected is {0}.\n Secondary emotion: {1}'.format(emotions[0]['Type'], emotions[1]['Type'])
+
+@app.after_request
+def add_header(response):
+    if 'Cache-Control' not in response.headers:
+        print('no-store')
+        response.headers['Cache-Control'] = 'no-store'
+    return response
 
 def main():
     app.run(host='0.0.0.0')

@@ -1,0 +1,16 @@
+.button{
+	border-radius: 2px;
+	border: 8px solid #000;
+	background-color: green;
+	height: 90px;
+	width: 220px;
+	margin: auto;
+	text-align: center;
+	font-size: 32;
+	font-family: "Arial";
+}
+.button:hover{
+	border-radius: 1px;
+	border: 6px solid #000;
+	background-color: blue;
+}
