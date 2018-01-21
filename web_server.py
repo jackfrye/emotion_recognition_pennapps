@@ -1,11 +1,13 @@
 from flask import Flask, render_template, send_file
-import boto3, json, os
+import boto3, json
 from picamera import PiCamera
 bucket='pennapps-at-seiji'
+with open('config.json', 'r') as config_file:
+    data = json.load(config_file)
 client = boto3.client(
 'rekognition',
-aws_access_key_id='AKIAJ74YC6ZXUINOGR2Q',
-aws_secret_access_key='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',
+aws_access_key_id=data['AWS_ACCESS_KEY'],
+aws_secret_access_key=data['AWS_SECRET_ACCESS_KEY'],
 region_name='us-east-2'
 )
 app=Flask(__name__)
@@ -32,7 +34,6 @@ def handle_runner():
 
 @app.route('/dyn/photo/<int:id>')
 def get_image(id):
-    print(os.getcwd())
     return send_file('photo.jpg')
 
 @app.route('/picture/', methods=['POST'])
